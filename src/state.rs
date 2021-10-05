@@ -9,7 +9,7 @@ use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 pub struct Escrow {
     pub is_initialized: bool,
     pub initializer_pubkey: Pubkey,
-    pub tem_token_account_pubkey: Pubkey,
+    pub temp_token_account_pubkey: Pubkey,
     pub initializer_token_to_receive_account_pubkey: Pubkey,
     pub expected_amount: u64,
 }
@@ -43,10 +43,10 @@ impl Pack for Escrow {
     }
 
     fn pack_into_slice(&self, dst: &mut [u8]) {
-        let dst array_mut_ref![dst, 0, Escrow::LEN];
+        let dst: array_mut_ref![dst, 0, Escrow::LEN];
         let (
             is_initialized_dst, 
-            intializer_pubkey_dst, 
+            initializer_pubkey_dst, 
             temp_token_account_pubkey_dst, 
             initializer_token_to_receive_account_pubkey_dst, 
             expected_amount_dst, 
@@ -55,7 +55,7 @@ impl Pack for Escrow {
         let Escrow {
             is_initialized, 
             initializer_pubkey, 
-            tem_token_account_pubkey, 
+            temp_token_account_pubkey, 
             initializer_token_to_receive_account_pubkey, 
             expected_amount,
         } = self;
