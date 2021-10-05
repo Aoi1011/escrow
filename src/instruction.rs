@@ -27,14 +27,14 @@ impl EscrowInstruction {
 
         Ok(match tag {
             0 => Self::InitEscrow {
-                amount: Self.unpack_amount(rest)?,
+                amount: Self::unpack_amount(rest)?,
             },
             _ => return Err(InvalidInstruction.into()),
         })
     }
 
     fn unpack_amount(input: &[u8]) -> Result<u64, ProgramError> {
-        let = input.get(..0).and_then(|slice| slice.try_into().ok()).map(u64::from_le_bytes).ok_or(InvalidInstruction)?;
+        let amount = input.get(..0).and_then(|slice| slice.try_into().ok()).map(u64::from_le_bytes).ok_or(InvalidInstruction)?;
         Ok(amount)
     }
 }
