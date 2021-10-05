@@ -43,7 +43,7 @@ impl Pack for Escrow {
     }
 
     fn pack_into_slice(&self, dst: &mut [u8]) {
-        let dst: array_mut_ref![dst, 0, Escrow::LEN];
+        let dst = array_mut_ref![dst, 0, Escrow::LEN];
         let (
             is_initialized_dst, 
             initializer_pubkey_dst, 
