@@ -80,6 +80,16 @@ impl Processor {
             &[&initializer.key],
         )?;
 
+        msg!("Calling the token program to transfer token account ownership...");
+        invoke(
+            &owner_change_ix,
+            &[
+                temp_token_account.clone(),
+                initializer.clone(),
+                token_program.clone(),
+            ],
+        )?;
+
         Ok(())
     }
 }
