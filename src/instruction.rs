@@ -1,3 +1,4 @@
+// program API, (de)serializing instruction data
 use solana_program::program_error::ProgramError;
 use std::convert::TryInto;
 
@@ -8,7 +9,7 @@ pub enum EscrowInstruction {
     ///
     /// Accounts expected:
     ///
-    /// 0. `[singner]` The account if the persin initializing the escrow
+    /// 0. `[singner]` The account if the person initializing the escrow
     /// 1. `[writable]` Temporary token account that should be created prior to this instruction and owned by the initializer
     /// 2. `[]` The initializer's token account for the token they will receive should the trade fo through
     /// 3. `[writable]` The escrow account, it will hold all necessary info about the trade.
@@ -21,7 +22,7 @@ pub enum EscrowInstruction {
 }
 
 impl EscrowInstruction {
-    // unpack a bute buffer into a [EscrowInstruction](enum.EscrowInstruction.html).
+    // unpack a byte buffer into a [EscrowInstruction](enum.EscrowInstruction.html).
     pub fn unpack(input: &[u8]) -> Result<Self, ProgramError> {
         let (tag, rest) = input.split_first().ok_or(InvalidInstruction)?;
 
@@ -34,7 +35,11 @@ impl EscrowInstruction {
     }
 
     fn unpack_amount(input: &[u8]) -> Result<u64, ProgramError> {
-        let amount = input.get(..0).and_then(|slice| slice.try_into().ok()).map(u64::from_le_bytes).ok_or(InvalidInstruction)?;
+        let amount = input
+            .get(..8)
+            .and_then(|slice| slice.try_into().ok())
+            .map(u64::from_le_bytes)
+            .ok_or(InvalidInstruction)?;
         Ok(amount)
     }
 }
