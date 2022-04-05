@@ -205,6 +205,14 @@ impl Processor {
             &[&[&b"escrow"[..], &[bump_seed]]],
         )?;
 
+        msg!("Closing the escrow account...");
+        **initializer_main_account.lamports.borrow_mut() = initializer_main_account
+            .lamports()
+            .checked_add(escrow_account.lamports())
+            .ok_or(EscrowError::AmountOverflow)?;
+        **escrow_account.lamports.borrow_mut() = 0;
+        *escrow_account.try_borrow_mut_data()? = &mut [];
+
         Ok(())
     }
 }
