@@ -30,3 +30,14 @@ $ cargo test-bpf
 ## References
 
 1.  https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/
+
+new token X: BpMy6GjcANwmLmvCAUuTtfHiMqVjAb6QkTowcGgjjwgk
+token x account: 6N33FCFbNadD8HepibU7CrsrznroZa6djA9TCWAFzA4k
+
+new token Y: Bh1NVMXDcnK2YUeazBk2CmCMgi4dbjnF3RfnBXaqxoFk
+token y account: T7sXEByb6V9AEcBnHWZwu4WJzoboC1itRT1jJsR6mDX
+
+programid: H63SHjKvrVbnViaGTFp95i98jnUR3yk7zkMgVfnG9zVR
+
+115,125,35,186,91,207,15,150,103,120,79,250,95,207,125,173,91,13,76,88,220,209,72,199,54,173,170,0,41,185,177,182,44,53,215,84,107,35,0,91,51,178,124,185,226,172,18,82,181,187,66,17,219,48,49,88,118,155,224,156,206,172,69,50
+
