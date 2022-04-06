@@ -2,7 +2,7 @@
 
 ## Environment Setup
 
-1. Install Rust from https://rustup.rs/
+1. Install Rust from https://www.rust-lang.org/tools/install
 2. Install Solana from https://docs.solana.com/cli/install-solana-cli-tools#use-solanas-install-tool
 
 ## Build and test for program compiled natively
@@ -19,6 +19,23 @@ $ cargo build-bpf
 $ cargo test-bpf
 ```
 
+## Code Structure
+
+```
+.
+├─ src
+│  ├─ lib.rs -> registering modules
+│  ├─ entrypoint.rs -> entrypoint to the program
+│  ├─ instruction.rs -> program API, (de)serializing instruction data
+│  ├─ processor.rs -> program logic
+│  ├─ state.rs -> program objects, (de)serializing state
+│  ├─ error.rs -> program specific errors
+├─ .gitignore
+├─ Cargo.lock
+├─ Cargo.toml
+├─ Xargo.toml
+```
+
 ## Flow of a program
 
 1. Someone calls the entrypoint
@@ -26,6 +43,7 @@ $ cargo test-bpf
 3. The processor asks instruction.rs to decode the instruction_data argument from the entrypoint function
 4. Using the decoded data, the processor will now decide which processing function to use to process the request
 5. The processor may use state.rs to encode state into or decode the state of an account which has been passed into the entrypoint
+
 
 ## References
 
