@@ -15,7 +15,7 @@ use solana_program::{
 pub struct Processor;
 
 impl Processor {
-    pub fn processor(
+    pub fn process(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         instruction_data: &[u8],
