@@ -27,6 +27,10 @@ impl Processor {
                 msg!("Instruction: InitEscrow");
                 Self::process_init_escrow(accounts, amount, program_id)
             }
+            EscrowInstruction::Exchange { amount } => {
+                msg!("Instruction: Exchange");
+                Self::process_init_escrow(accounts, amount, program_id)
+            }
         }
     }
 
@@ -56,10 +60,6 @@ impl Processor {
             return Err(EscrowError::NotRentExempt.into());
         }
 
-        if escrow_account.is_initialized() {
-            return Err(ProgramError::AccountAlreadyInitialized);
-        }
-
         let mut escrow_info = Escrow::unpack_unchecked(&escrow_account.try_borrow_data()?)?;
         if escrow_info.is_initialized() {
             return Err(ProgramError::AccountAlreadyInitialized);
@@ -72,7 +72,7 @@ impl Processor {
         escrow_info.expected_amount = amount;
 
         Escrow::pack(escrow_info, &mut escrow_account.try_borrow_mut_data()?)?;
-        let (pda, _bump_seed) = Pubkey::find_program_address(&[b"escrow"], program_id);
+        let (pda, _nonce) = Pubkey::find_program_address(&[b"escrow"], program_id);
 
         let token_program = next_account_info(account_info_iter)?;
         let owner_change_ix = spl_token::instruction::set_authority(
