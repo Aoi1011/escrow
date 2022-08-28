@@ -55,7 +55,8 @@ $ cargo test-bpf
 
 ## References
 
-1.  https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/
+1. https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/
+2. https://hackmd.io/@ironaddicteddog/solana-anchor-escrow#Overview
 
 new token X: BpMy6GjcANwmLmvCAUuTtfHiMqVjAb6QkTowcGgjjwgk
 token x account: 6N33FCFbNadD8HepibU7CrsrznroZa6djA9TCWAFzA4k
