@@ -1,5 +1,13 @@
 # Solana Escrow
 
+## Detail 
+### Alice's transaction
+1. create empty account owned by token program
+2. initialize empty account as Alice's X token account
+3. transfer X tokens from Alice's main X token account to her temporary X token account
+4. create empty account owned by escrow program
+5. initialize empty account as escrow state and transfer temporary X token account ownership to PDA
+
 ## Environment Setup
 
 1. Install Rust from https://www.rust-lang.org/tools/install
