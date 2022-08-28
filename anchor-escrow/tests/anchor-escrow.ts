@@ -7,7 +7,7 @@ import {assert} from "chai";
 
 describe("anchor-escrow", () => {
   // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.env();
+  const provider = anchor.Provider.env();
   anchor.setProvider(provider);
 
   const program = anchor.workspace.AnchorEscrow as Program<AnchorEscrow>;
@@ -33,26 +33,86 @@ describe("anchor-escrow", () => {
   
   
   it("Initialize program state", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
+    // Airdropping tokens to a payer.
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(payer.publicKey, 10000000000), "processed"
+    );
+    
+    // Fund Main Accounts
+    await provider.send( 
+      (() => {
+        const tx = new Transaction();
+        tx.add(
+          SystemProgram.transfer({
+            fromPubkey: payer.publicKey,
+            toPubkey: initializerMainAccount.publicKey,
+            lamports: 1000000000
+          }),
+          SystemProgram.transfer({
+            fromPubkey: payer.publicKey,
+            toPubkey: takerMainAccount.publicKey,
+            lamports: 1000000000
+          })
+        );
+        return tx;
+      })(),
+      [payer]
+    );
+    
+    mintA = await Token.createMint(
+      provider.connection,
+      payer,
+      mintAuthority.publicKey,
+      null,
+      0,
+      TOKEN_PROGRAM_ID,
+    );
+    
+    mintB = await Token.createMint(
+      provider.connection,
+      payer,
+      mintAuthority.publicKey,
+      null,
+      0,
+      TOKEN_PROGRAM_ID,
+    );
+    
+    initializerTokenAccountA = await mintA.createAccount(initializerMainAccount.publicKey);
+    takerTokenAccountA = await mintA.createAccount(takerMainAccount.publicKey);
+    
+    initializerTokenAccountB = await mintB.createAccount(initializerMainAccount.publicKey);
+    takerTokenAccountB = await mintB.createAccount(takerMainAccount.publicKey);
+    
+    await mintA.mintTo(
+      initializerTokenAccountA,
+      mintAuthority.publicKey,
+      [mintAuthority],
+      initializerAmount
+    );
+    await mintB.mintTo(
+      takerTokenAccountB,
+      mintAuthority.publicKey,
+      [mintAuthority],
+      takerAmount
+    );
+    
+    let _initializerTokenAccountA = await mintA.getAccountInfo(initializerTokenAccountA);
+    let _takerTokenAccountB = await mintB.getAccountInfo(takerTokenAccountB);
+    
+    assert.ok(_initializerTokenAccountA.amount.toNumber() == initializerAmount);
+    assert.ok(_takerTokenAccountB.amount.toNumber() == takerAmount);
+    
   });
 
   it("Initialize escrow", async () => {
     // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
   });
 
   it("Exchange escrow state", async () => {
     // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
   });
 
   it("Initialize escrow and cancel escrow", async () => {
     // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
   });
 });
