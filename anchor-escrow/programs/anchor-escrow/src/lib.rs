@@ -12,6 +12,7 @@ pub mod anchor_escrow {
 
     pub fn initialize(
         ctx: Context<Initialize>,
+        _vault_account_bump: u8,
         initializer_amount: u64,
         taker_amount: u64,
     ) -> Result<()> {
@@ -98,7 +99,7 @@ pub mod anchor_escrow {
 }
 
 #[derive(Accounts)]
-#[instruction(initializer_amount: u64)]
+#[instruction(vault_account_bump: u8, initializer_amount: u64)]
 pub struct Initialize<'info> {
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut, signer)]
