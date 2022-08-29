@@ -159,27 +159,27 @@ pub struct Exchange<'info> {
     /// CHECK: This is not dangerous because we don't read or write from this account
     pub taker: AccountInfo<'info>,
     #[account(mut)]
-    pub taker_deposit_token_account: Account<'info, TokenAccount>,
+    pub taker_deposit_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub taker_receive_token_account: Account<'info, TokenAccount>,
+    pub taker_receive_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub initializer_deposit_token_account: Account<'info, TokenAccount>,
+    pub initializer_deposit_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub initializer_receive_token_account: Account<'info, TokenAccount>,
+    pub initializer_receive_token_account: Box<Account<'info, TokenAccount>>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     pub initializer: AccountInfo<'info>,
     #[account(
         mut,
-        constraint = escrow_account.taker_amount == taker_deposit_token_account.amount, 
+        constraint = escrow_account.taker_amount <= taker_deposit_token_account.amount, 
         constraint = escrow_account.initializer_deposit_token_account == *initializer_deposit_token_account.to_account_info().key,
         constraint = escrow_account.initializer_receive_token_account == *initializer_receive_token_account.to_account_info().key,
         constraint = escrow_account.initializer_key == *initializer.key,
-        close = initializer    
+        close = initializer
     )]
     pub escrow_account: Box<Account<'info, EscrowAccount>>,
     #[account(mut)]
-    pub vault_account: Account<'info, TokenAccount>,
+    pub vault_account: Box<Account<'info, TokenAccount>>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     pub vault_authority: AccountInfo<'info>,
     /// CHECK: This is not dangerous because we don't read or write from this account
@@ -259,10 +259,7 @@ impl<'info> Exchange<'info> {
 
     fn into_transfer_to_taker_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let cpi_accounts = Transfer {
-            from: self
-                .initializer_deposit_token_account
-                .to_account_info()
-                .clone(),
+            from: self.vault_account.to_account_info().clone(),
             to: self.taker_receive_token_account.to_account_info().clone(),
             authority: self.vault_authority.clone(),
         };
