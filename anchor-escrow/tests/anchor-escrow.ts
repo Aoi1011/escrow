@@ -111,7 +111,7 @@ describe("anchor-escrow", () => {
     vault_account_bump = _vault_account_bump;
     
     const [_vault_authority_pda, _vault_authority_bump] = await PublicKey.findProgramAddress([Buffer.from(anchor.utils.bytes.utf8.encode("escrow"))], program.programId);
-    vault_authority_pda = _vault_account_pda;
+    vault_authority_pda = _vault_authority_pda;
     
     await program.rpc.initialize(
       vault_account_bump,
