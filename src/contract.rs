@@ -132,6 +132,7 @@ mod tests {
     use cw_utils::Expiration;
 
     use crate::{
+        contract::query_arbiter,
         msg::InstantiateMsg,
         state::{Config, CONFIG},
         ContractError,
@@ -187,5 +188,29 @@ mod tests {
             ContractError::Expired { .. } => {}
             e => panic!("unexpected error: {:?}", e),
         }
+    }
+
+    #[test]
+    fn init_and_query() {
+        let mut deps = mock_dependencies();
+
+        let arbiter = Addr::unchecked("arbiters");
+        let recipient = Addr::unchecked("receives");
+        let creator = Addr::unchecked("creators");
+        let msg = InstantiateMsg {
+            arbiter: arbiter.clone().into(),
+            recipient: recipient.clone().into(),
+            expiration: None,
+        };
+        let mut env = mock_env();
+        env.block.height = 876;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info(creator.as_str(), &[]);
+        let res = instantiate(deps.as_mut(), env, info, msg).unwrap();
+        assert_eq!(res.messages.len(), 0);
+
+        // now let's query
+        let query_response = query_arbiter(deps.as_ref()).unwrap();
+        assert_eq!(query_response.arbiter, arbiter);
     }
 }
