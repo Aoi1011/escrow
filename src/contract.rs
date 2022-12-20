@@ -279,4 +279,52 @@ mod tests {
             })
         );
     }
+
+    #[test]
+    fn handle_refund() {
+        let mut deps = mock_dependencies();
+
+        // initialize the store
+        let init_amount = coins(1000, "earth");
+        let msg = init_msg_expire_by_height(Some(Expiration::AtHeight(1000)));
+        let mut env = mock_env();
+        env.block.height = 876;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("creator", &init_amount);
+        let contract_addr = env.clone().contract.address;
+        let init_res = instantiate(deps.as_mut(), env, info, msg).unwrap();
+        assert_eq!(0, init_res.messages.len());
+
+        // balance changed in init
+        deps.querier.update_balance(&contract_addr, init_amount);
+
+        // can not release when unexpired (height < Expiration::AtHeight(1000))
+        let msg = ExecuteMsg::Refund {};
+        let mut env = mock_env();
+        env.block.height = 800;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("anybody", &[]);
+        let execute_res = execute(deps.as_mut(), env, info, msg);
+        match execute_res.unwrap_err() {
+            ContractError::NotExpired {} => {}
+            e => panic!("unexpected error: {:?}", e),
+        }
+
+        // contract when height  == Expiration::AtHeight(1000)
+        let msg = ExecuteMsg::Refund {};
+        let mut env = mock_env();
+        env.block.height = 1000;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("anybody", &[]);
+        let execute_res = execute(deps.as_mut(), env, info, msg).unwrap();
+        assert_eq!(1, execute_res.messages.len());
+        let msg = execute_res.messages.get(0).expect("no message");
+        assert_eq!(
+            msg.msg,
+            CosmosMsg::Bank(cosmwasm_std::BankMsg::Send {
+                to_address: "creator".into(),
+                amount: coins(1000, "earth"),
+            })
+        );
+    }
 }
