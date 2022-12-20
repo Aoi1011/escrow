@@ -1,25 +1,39 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-// use cw2::set_contract_version;
+use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::state::{Config, CONFIG};
 
-/*
-// version info for migration info
 const CONTRACT_NAME: &str = "crates.io:escrow";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-*/
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _msg: InstantiateMsg,
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
+    let config = Config {
+        arbiter: deps.api.addr_validate(&msg.arbiter)?,
+        recipient: deps.api.addr_validate(&msg.recipient)?,
+        source: info.sender,
+        expiration: msg.expiration,
+    };
+
+    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    if let Some(expiration) = msg.expiration {
+        if expiration.is_expired(&env.block) {
+            return Err(ContractError::Expired { expiration });
+        }
+    }
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::default())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
