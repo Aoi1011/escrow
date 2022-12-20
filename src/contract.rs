@@ -127,13 +127,13 @@ mod tests {
     use cosmwasm_std::{
         coins,
         testing::{mock_dependencies, mock_env, mock_info},
-        Addr, Timestamp,
+        Addr, CosmosMsg, Timestamp,
     };
     use cw_utils::Expiration;
 
     use crate::{
-        contract::query_arbiter,
-        msg::InstantiateMsg,
+        contract::{execute, query_arbiter},
+        msg::{ExecuteMsg, InstantiateMsg},
         state::{Config, CONFIG},
         ContractError,
     };
@@ -212,5 +212,71 @@ mod tests {
         // now let's query
         let query_response = query_arbiter(deps.as_ref()).unwrap();
         assert_eq!(query_response.arbiter, arbiter);
+    }
+
+    #[test]
+    fn execute_approve() {
+        let mut deps = mock_dependencies();
+
+        // initialize store
+        let init_amount = coins(1000, "earth");
+        let msg = init_msg_expire_by_height(Some(Expiration::AtHeight(1000)));
+        let mut env = mock_env();
+        env.block.height = 876;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("creator", &init_amount);
+        let contract_addr = env.clone().contract.address;
+        let init_res = instantiate(deps.as_mut(), env, info, msg).unwrap();
+        assert_eq!(0, init_res.messages.len());
+
+        // balance changed in init
+        deps.querier.update_balance(&contract_addr, init_amount);
+
+        // beneficiary cannot release it
+        let msg = ExecuteMsg::Approve { quantity: None };
+        let mut env = mock_env();
+        env.block.height = 900;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("beneficiary", &[]);
+        let execute_res = execute(deps.as_mut(), env, info, msg.clone());
+        match execute_res.unwrap_err() {
+            ContractError::Unauthorized { .. } => {}
+            e => panic!("unexpected error: {:?}", e),
+        }
+
+        // verifier cannot release it when expired
+        let mut env = mock_env();
+        env.block.height = 999;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("verifies", &[]);
+        let execute_res = execute(deps.as_mut(), env, info, msg).unwrap();
+        assert_eq!(1, execute_res.messages.len());
+        let msg = execute_res.messages.get(0).expect("no message");
+        assert_eq!(
+            msg.msg,
+            CosmosMsg::Bank(cosmwasm_std::BankMsg::Send {
+                to_address: "benefits".into(),
+                amount: coins(1000, "earth")
+            })
+        );
+
+        // partial release by verfier, before expiration
+        let partial_msg = ExecuteMsg::Approve {
+            quantity: Some(coins(500, "earth")),
+        };
+        let mut env = mock_env();
+        env.block.height = 999;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("verifies", &[]);
+        let execute_res = execute(deps.as_mut(), env, info, partial_msg).unwrap();
+        assert_eq!(1, execute_res.messages.len());
+        let msg = execute_res.messages.get(0).expect("no message");
+        assert_eq!(
+            msg.msg,
+            CosmosMsg::Bank(cosmwasm_std::BankMsg::Send {
+                to_address: "benefits".into(),
+                amount: coins(500, "earth")
+            })
+        );
     }
 }
