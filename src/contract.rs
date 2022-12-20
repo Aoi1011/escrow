@@ -122,6 +122,8 @@ fn query_arbiter(deps: Deps) -> StdResult<ArbiterResponse> {
 
 #[cfg(test)]
 mod tests {
+    use core::panic;
+
     use cosmwasm_std::{
         coins,
         testing::{mock_dependencies, mock_env, mock_info},
@@ -132,6 +134,7 @@ mod tests {
     use crate::{
         msg::InstantiateMsg,
         state::{Config, CONFIG},
+        ContractError,
     };
 
     use super::instantiate;
@@ -167,5 +170,22 @@ mod tests {
                 expiration: Some(Expiration::AtHeight(1000))
             }
         );
+    }
+
+    #[test]
+    fn cannot_initiate_expired() {
+        let mut deps = mock_dependencies();
+
+        let msg = init_msg_expire_by_height(Some(Expiration::AtHeight(1000)));
+        let mut env = mock_env();
+        env.block.height = 1001;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("creator", &coins(1000, "earch"));
+
+        let res = instantiate(deps.as_mut(), env, info, msg);
+        match res.unwrap_err() {
+            ContractError::Expired { .. } => {}
+            e => panic!("unexpected error: {:?}", e),
+        }
     }
 }
