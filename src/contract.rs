@@ -121,4 +121,51 @@ fn query_arbiter(deps: Deps) -> StdResult<ArbiterResponse> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use cosmwasm_std::{
+        coins,
+        testing::{mock_dependencies, mock_env, mock_info},
+        Addr, Timestamp,
+    };
+    use cw_utils::Expiration;
+
+    use crate::{
+        msg::InstantiateMsg,
+        state::{Config, CONFIG},
+    };
+
+    use super::instantiate;
+
+    fn init_msg_expire_by_height(expiration: Option<Expiration>) -> InstantiateMsg {
+        InstantiateMsg {
+            arbiter: String::from("verifies"),
+            recipient: String::from("benefits"),
+            expiration,
+        }
+    }
+
+    #[test]
+    fn proper_initialization() {
+        let mut deps = mock_dependencies();
+
+        let msg = init_msg_expire_by_height(Some(Expiration::AtHeight(1000)));
+        let mut env = mock_env();
+        env.block.height = 876;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("creator", &coins(1000, "earth"));
+
+        let res = instantiate(deps.as_mut(), env, info, msg).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        let state = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(
+            state,
+            Config {
+                arbiter: Addr::unchecked("verifies"),
+                recipient: Addr::unchecked("benefits"),
+                source: Addr::unchecked("creator"),
+                expiration: Some(Expiration::AtHeight(1000))
+            }
+        );
+    }
+}
