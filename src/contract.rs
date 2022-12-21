@@ -344,4 +344,35 @@ mod tests {
             })
         );
     }
+
+    #[test]
+    fn handle_refund_no_expiration() {
+        let mut deps = mock_dependencies();
+
+        // initialize the store
+        let init_amount = coins(1000, "earth");
+        let msg = init_msg_expire_by_height(None);
+        let mut env = mock_env();
+        env.block.height = 876;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("creator", &init_amount);
+        let contract_addr = env.clone().contract.address;
+        let init_res = instantiate(deps.as_mut(), env, info, msg).unwrap();
+        assert_eq!(0, init_res.messages.len());
+
+        // balance changed in init
+        deps.querier.update_balance(&contract_addr, init_amount);
+
+        // cannot release when unexpired (no expiration)
+        let msg = ExecuteMsg::Refund {};
+        let mut env = mock_env();
+        env.block.height = 800;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("anybody", &[]);
+        let execute_res = execute(deps.as_mut(), env, info, msg);
+        match execute_res.unwrap_err() {
+            ContractError::NotExpired {} => {}
+            e => panic!("unexpected error: {:?}", e),
+        }
+    }
 }
