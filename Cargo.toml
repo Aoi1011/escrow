@@ -52,3 +52,4 @@ thiserror = { version = "1.0.31" }
 
 [dev-dependencies]
 cw-multi-test = "0.15.1"
+cosmwasm-vm = "1.1.9"
