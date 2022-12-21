@@ -322,7 +322,24 @@ mod tests {
         assert_eq!(
             msg.msg,
             CosmosMsg::Bank(cosmwasm_std::BankMsg::Send {
-                to_address: "creator".into(),
+                to_address: "verifies".into(),
+                amount: coins(1000, "earth"),
+            })
+        );
+
+        // anyone can release after expiration
+        let msg = ExecuteMsg::Refund {};
+        let mut env = mock_env();
+        env.block.height = 1001;
+        env.block.time = Timestamp::from_seconds(0);
+        let info = mock_info("anybody", &[]);
+        let execute_res = execute(deps.as_mut(), env, info, msg).unwrap();
+        assert_eq!(1, execute_res.messages.len());
+        let msg = execute_res.messages.get(0).expect("no message");
+        assert_eq!(
+            msg.msg,
+            CosmosMsg::Bank(cosmwasm_std::BankMsg::Send {
+                to_address: "verifies".into(),
                 amount: coins(1000, "earth"),
             })
         );
